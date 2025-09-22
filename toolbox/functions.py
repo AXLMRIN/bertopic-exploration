@@ -1,9 +1,15 @@
+import os; os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from bertopic import BERTopic
+from gensim.models.coherencemodel import CoherenceModel
+from gensim.corpora import Dictionary
 from hdbscan import HDBSCAN
+from lightlemma import tokenize, lemmatize
 from numpy import ndarray, logical_not
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import (silhouette_score, calinski_harabasz_score, 
+    davies_bouldin_score)
 import stopwordsiso as stopwords
 from torch import load, save, Tensor
 from umap import UMAP
@@ -85,3 +91,41 @@ def generate_embeddings(testing : bool = False):
 
 
     df["abstract"].to_csv("./stash/abstracts.csv",index = False)
+
+def create_coherence_object():
+    ''''''
+    def format_(representation : str):
+        representation = representation.\
+            replace("[","").\
+            replace("]","").\
+            replace("'","").\
+            replace(" ", "")
+        # representation_lists = representation.
+        return [lemmatize(word) for word in representation.split(",")]
+
+    df_topics = pd.read_csv("./stash/topic_info.csv")
+    topics = [format_(representation) 
+              for representation in df_topics["Representation"]]
+    
+    df_abstracts = pd.read_csv("./stash/abstracts.csv")
+    texts = [[lemmatize(word) for word in tokenize(abstract)]
+         for abstract in df_abstracts["abstract"]]
+    
+    return CoherenceModel(
+        topics     = topics,
+        texts      = texts,
+        dictionary = Dictionary(texts),
+        coherence  = "c_v"
+    )
+
+def measure_performances()->dict:
+    ''''''
+    # cm = create_coherence_object()
+    embs = load("./stash/embeddings.pt", weights_only = True).numpy()
+    topics_ids = pd.read_csv("./stash/topics.csv")["topics_id"].to_numpy()
+    return {
+        "silhouette_score" : silhouette_score(embs, topics_ids),
+        "Variance Ratio Criterion" : calinski_harabasz_score(embs, topics_ids),
+        "DBI" : davies_bouldin_score(embs, topics_ids),
+        # "coherence" : cm.get_coherence(),
+    }
