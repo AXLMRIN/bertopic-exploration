@@ -30,14 +30,15 @@ def create_hdbscan_model(hdbscan_min_cluster_size : int,
     ) 
 
 def create_topic_model(nr_topics : int, min_topic_size : int, umap_model : UMAP, 
-        hdbscan_model : HDBSCAN) -> BERTopic:
+        hdbscan_model : HDBSCAN) -> tuple[BERTopic, CustomLemmaTokenizer]:
     ''''''
+    lemmatizer = CustomLemmaTokenizer()
     vectorizer_model = CountVectorizer(
-        stop_words=list(stopwords.stopwords("en")),
-        tokenizer=CustomLemmaTokenizer()
+        stop_words   = list(stopwords.stopwords("en")),
+        tokenizer    = lemmatizer 
     )
 
-    return BERTopic(
+    topic_model =  BERTopic(
         language            = "en",
         vectorizer_model    = vectorizer_model,
         nr_topics           = nr_topics,
@@ -45,9 +46,10 @@ def create_topic_model(nr_topics : int, min_topic_size : int, umap_model : UMAP,
         umap_model          = umap_model,
         hdbscan_model       = hdbscan_model,
     )
+    return topic_model, lemmatizer
 
 def setup(umap_parameters : dict, hdbscan_parameters : dict, 
-        bertopic_parameters : dict) -> BERTopic:
+        bertopic_parameters : dict) -> tuple[BERTopic, CustomLemmaTokenizer]:
     ''''''
     bertopic_parameters = {
         "umap_model" : create_umap_model(**umap_parameters),

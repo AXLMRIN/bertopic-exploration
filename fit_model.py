@@ -26,8 +26,10 @@ topic_model_parameters = {
 }
 
 
-topic_model = tbx.setup(umap_model_parameters, hdbscan_model_parameters, topic_model_parameters)
+topic_model, lemmatizer = tbx.setup(umap_model_parameters, hdbscan_model_parameters, topic_model_parameters)
 topics, _ = topic_model.fit_transform(**tbx.fetch_documents_and_embedding())
 
-pd.DataFrame({'topics' : topics}).\
-    to_csv("./stash/topics.csv", index = False)
+pd.DataFrame({'topics_id' : topics}).to_csv("./stash/topics.csv", index = False)
+topic_info = topic_model.get_topic_info()
+topic_info["Representation"] = topic_info["Representation"].apply(lemmatizer.revert)
+topic_info.to_csv("./stash/topic_info.csv", index = False)
