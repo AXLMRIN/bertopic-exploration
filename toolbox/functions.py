@@ -83,8 +83,10 @@ def generate_embeddings(df : pd.DataFrame, testing : bool = False):
     embeddings = Tensor(model.encode(sentences.to_list()))
     save(embeddings, "./stash/embeddings.pt")
 
-
-    df["abstract"].to_csv("./stash/abstracts.csv",index = False)
+def save_topics(topics, topic_info, lemmatizer):
+    pd.DataFrame({'topics_id' : topics}).to_csv("./stash/topics.csv", index = False)
+    topic_info["Representation"] = topic_info["Representation"].apply(lemmatizer.revert)
+    topic_info.to_csv("./stash/topic_info.csv", index = False)
 
 def create_coherence_object():
     ''''''
