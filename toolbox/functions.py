@@ -70,11 +70,17 @@ def fetch_documents_and_embedding(as_tuple : bool = False)->dict[str : list[str]
     if as_tuple : return docs, embs
     else : return {"documents" : docs, "embeddings" : embs}
 
-def generate_embeddings(testing : bool = False):
-    df = pd.read_csv("./stash/openalex_llm_social_02072025.csv", 
-        usecols=["title", "abstract", "topics.display_name", "language","id"])
+def generate_embeddings(df : pd.DataFrame, testing : bool = False):
+    ''''''
+    model_name = "jinaai/jina-embeddings-v3"
+    if testing : 
+        df = df.iloc[:50]
+        model_name = "google-bert/bert-base-uncased"
 
+    sentences = df["abstract"]
     sentences.to_csv("./stash/sentences.csv",index = False)
+    model = SentenceTransformer(model_name)
+    embeddings = Tensor(model.encode(sentences.to_list()))
     save(embeddings, "./stash/embeddings.pt")
 
 
