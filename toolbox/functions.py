@@ -65,7 +65,7 @@ def setup(umap_parameters : dict, hdbscan_parameters : dict,
     return create_topic_model(**bertopic_parameters)
 
 def fetch_documents_and_embedding(as_tuple : bool = False)->dict[str : list[str]|ndarray]:
-    docs = pd.read_csv("./stash/abstracts.csv")["abstract"].to_list()
+    docs = pd.read_csv("./stash/sentences.csv")["abstract"].to_list()
     embs = load("./stash/embeddings.pt", weights_only=True).numpy()
     if as_tuple : return docs, embs
     else : return {"documents" : docs, "embeddings" : embs}
@@ -74,19 +74,7 @@ def generate_embeddings(testing : bool = False):
     df = pd.read_csv("./stash/openalex_llm_social_02072025.csv", 
         usecols=["title", "abstract", "topics.display_name", "language","id"])
 
-    df = df.loc[df["language"] == "en", ]
-    # drop na
-    df = df.loc[logical_not(df["abstract"].isna()), :]
-
-    if testing : df = df.iloc[:100]
-
-    sentences = df["abstract"].to_list()
-    wrong_format_sentences = [sentence for sentence in sentences if not(isinstance(sentence, str))]
-    if len(wrong_format_sentences)>0:
-        print("Wrong format sentences : ", wrong_format_sentences)
-
-    model = SentenceTransformer("google-bert/bert-base-uncased")
-    embeddings = Tensor(model.encode(sentences))
+    sentences.to_csv("./stash/sentences.csv",index = False)
     save(embeddings, "./stash/embeddings.pt")
 
 
@@ -107,7 +95,7 @@ def create_coherence_object():
     topics = [format_(representation) 
               for representation in df_topics["Representation"]]
     
-    df_abstracts = pd.read_csv("./stash/abstracts.csv")
+    df_abstracts = pd.read_csv("./stash/sentences.csv")
     texts = [[lemmatize(word) for word in tokenize(abstract)]
          for abstract in df_abstracts["abstract"]]
     
