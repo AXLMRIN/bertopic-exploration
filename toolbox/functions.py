@@ -80,7 +80,7 @@ def generate_embeddings(df : pd.DataFrame, testing : bool = False):
     sentences = df["abstract"]
     sentences.to_csv("./stash/sentences.csv",index = False)
     model = SentenceTransformer(model_name)
-    embeddings = Tensor(model.encode(sentences.to_list(),batch_size=16))
+    embeddings = Tensor(model.encode(sentences.to_list(),batch_size=16, show_progress_bar = True))
     save(embeddings, "./stash/embeddings.pt")
 
 def save_topics(topics, topic_info, lemmatizer):
