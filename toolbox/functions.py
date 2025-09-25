@@ -72,7 +72,7 @@ def fetch_documents_and_embedding(as_tuple : bool = False)->dict[str : list[str]
 
 def generate_embeddings(df : pd.DataFrame, testing : bool = False):
     ''''''
-    model_name = "jinaai/jina-embeddings-v3"
+    model_name = "answerdotai/ModernBERT-large"
     if testing : 
         df = df.iloc[:50]
         model_name = "google-bert/bert-base-uncased"
@@ -80,7 +80,7 @@ def generate_embeddings(df : pd.DataFrame, testing : bool = False):
     sentences = df["abstract"]
     sentences.to_csv("./stash/sentences.csv",index = False)
     model = SentenceTransformer(model_name)
-    embeddings = Tensor(model.encode(sentences.to_list()))
+    embeddings = Tensor(model.encode(sentences.to_list(),batch_size=16))
     save(embeddings, "./stash/embeddings.pt")
 
 def save_topics(topics, topic_info, lemmatizer):
